@@ -17,7 +17,7 @@ resource "azurerm_management_group" "example" {
 }
 
 #resource group
-resource "azurerm_resource_group" "example_rg" {
+resource "azurerm_resource_group" "example" {
   name     = "example-resources"
   location = "East US"
 }
@@ -70,7 +70,7 @@ resource "azurerm_budget" "example" {
 #budget alert
 resource "azurerm_budget_alert" "rg_alert" {
   name               = "rg-budget-alert"
-  resource_group_name = azurerm_resource_group.example_rg.name
+  resource_group_name = azurerm_resource_group.example.name
   budget_id          = azurerm_budget.rg_budget.id
 
   threshold = 70
@@ -106,14 +106,14 @@ resource "azurerm_role_assignment" "rbac_vm_contributor" {
 resource "azurerm_virtual_network" "example_vnet" {
   name                = "example-vnet"
   address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.example_rg.location
-  resource_group_name = azurerm_resource_group.example_rg.name
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
 }
 
 # Example: Subnet
 resource "azurerm_subnet" "example_subnet" {
   name                 = "example-subnet"
-  resource_group_name  = azurerm_resource_group.example_rg.name
+  resource_group_name  = azurerm_resource_group.example.name
   virtual_network_name = azurerm_virtual_network.example_vnet.name
   address_prefixes     = ["10.0.1.0/24"]
 }
@@ -153,7 +153,7 @@ resource "azurerm_network_security_group" "example" {
   # Define more security rules as needed
 }
 
-resource "azurerm_ddos_protection_plan" "example" {
+resource "azurerm_network_ddos_protection_plan" "example" {
   name                = "example-ddos-plan"
   location            = azurerm_resource_group.example.location
   resource_group_name = azurerm_resource_group.example.name
