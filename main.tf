@@ -56,6 +56,22 @@ resource "azurerm_policy_assignment" "example" {
   name                 = "example-policy-assignment"
   scope                = azurerm_resource_group.example.id
   policy_definition_id = azurerm_policy_definition.example.id
+  description          = "Policy Assignment created via an Acceptance Test"
+  display_name         = "My Example Policy Assignment"
+
+  metadata = <<METADATA
+    {
+    "category": "General"
+    }
+METADATA
+
+  parameters = <<PARAMETERS
+{
+  "allowedLocations": {
+    "value": [ "West Europe" ]
+  }
+}
+PARAMETERS
 }
 
 # budgets plans
@@ -185,6 +201,13 @@ resource "azurerm_virtual_machine" "example" {
     offer     = "UbuntuServer"
     sku       = "16.04-LTS"
     version   = "latest"
+  }
+
+  storage_os_disk {
+    name              = "myosdisk1"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
   }
 
   os_profile {
