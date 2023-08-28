@@ -155,21 +155,21 @@ resource "azurerm_consumption_budget_subscription" "example" {
 #rabac roles subscription and resource groups level
 resource "azurerm_role_assignment" "rbac_owner" {
   for_each = toset(var.rbac_roles["owner"]["assignments"])
-
+  scope              = data.azurerm_subscription.primary.id
   principal_id   = data.azurerm_client_config.current.object_id
   role_definition_name = "Owner"
 }
 
 resource "azurerm_role_assignment" "rbac_contributor" {
   for_each = toset(var.rbac_roles["contributor"]["assignments"])
-
+  scope              = data.azurerm_subscription.primary.id
   principal_id   = data.azurerm_client_config.current.object_id
   role_definition_name = "Contributor"
 }
 
 resource "azurerm_role_assignment" "rbac_vm_contributor" {
   for_each = toset(var.rbac_roles["vm_contributor"]["assignments"])
-
+  scope              = data.azurerm_subscription.primary.id
   principal_id   = data.azurerm_client_config.current.object_id
   role_definition_name = "Virtual Machine Contributor"
 }
