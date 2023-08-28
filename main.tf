@@ -273,7 +273,7 @@ resource "azurerm_security_center_assessment_policy" "example" {
 #   policy_setting      = "Default"
 #   assessment_type     = "VulnerabilityAssessment"
 #   resource_type       = "AzureVM"
-  categories          = Compute
+#   categories          = Compute
   severity            = "Medium"
 #   status              = "Enabled"
   description         = "Test Description"
@@ -282,14 +282,6 @@ resource "azurerm_security_center_assessment_policy" "example" {
 
 resource "azurerm_security_center_auto_provisioning" "defender" {
   auto_provision = "On"
-#   workspace_id   = azurerm_log_analytics_workspace.example.id
-#   tier           = "Standard"
-
-#   security_center_contact {
-#     alert_notifications = ["High", "Critical"]
-#   }
-
-#   high_priority_security_recommendations = true
 }
 
 resource "azurerm_eventhub_namespace" "example" {
