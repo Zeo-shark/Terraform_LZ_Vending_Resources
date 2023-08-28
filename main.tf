@@ -11,6 +11,8 @@ provider "azurerm" {
   features {}
 }
 
+data "azurerm_client_config" "current" {}
+
 #management group
 resource "azurerm_management_group" "example" {
   name = "example-management-group"
@@ -111,7 +113,7 @@ resource "azurerm_virtual_network" "example_vnet" {
 }
 
 # Example: Subnet
-resource "azurerm_subnet" "example_subnet" {
+resource "azurerm_subnet" "example" {
   name                 = "example-subnet"
   resource_group_name  = azurerm_resource_group.example.name
   virtual_network_name = azurerm_virtual_network.example_vnet.name
@@ -215,7 +217,7 @@ resource "azurerm_log_analytics_workspace" "example" {
 }
 
 resource "azurerm_security_center_subscription_pricing" "example" {
-  resource_group_name = azurerm_resource_group.example.name
+#   resource_group_name = azurerm_resource_group.example.name
   tier                = "Standard"
 }
 
@@ -224,44 +226,100 @@ resource "azurerm_security_center_contact" "example" {
   name          = "example-contact"
   email         = "security@example.com"
   phone         = "123-456-7890"
-  alert_notifications = ["High", "Critical"]
+  alert_notifications = true
+  alerts_to_admins    = true
 }
 
 resource "azurerm_security_center_auto_provisioning" "example" {
-  auto_provision = true
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.example.id
+  auto_provision = "On"
+#   log_analytics_workspace_id = azurerm_log_analytics_workspace.example.id
 }
 
-resource "azurerm_security_center_security_contact" "example" {
-  contact_id = azurerm_security_center_contact.example.id
-}
+# resource "azurerm_security_center_security_contact" "example" {
+#   contact_id = azurerm_security_center_contact.example.id
+# }
 
 resource "azurerm_security_center_assessment_policy" "example" {
-  name                = "example-assessment-policy"
-  policy_setting      = "Default"
-  assessment_type     = "VulnerabilityAssessment"
-  resource_type       = "AzureVM"
-  severity            = ["High", "Medium"]
-  status              = "Enabled"
+  display_name        = "example-assessment-policy"
+#   policy_setting      = "Default"
+#   assessment_type     = "VulnerabilityAssessment"
+#   resource_type       = "AzureVM"
+  categories          = Compute
+  severity            = "Medium"
+#   status              = "Enabled"
+  description         = "Test Description"
 }
 
 
 resource "azurerm_security_center_auto_provisioning" "defender" {
-  auto_provision = true
-  workspace_id   = azurerm_log_analytics_workspace.example.id
-  tier           = "Standard"
+  auto_provision = "On"
+#   workspace_id   = azurerm_log_analytics_workspace.example.id
+#   tier           = "Standard"
 
-  security_center_contact {
-    alert_notifications = ["High", "Critical"]
+#   security_center_contact {
+#     alert_notifications = ["High", "Critical"]
+#   }
+
+#   high_priority_security_recommendations = true
+}
+
+resource "azurerm_eventhub_namespace" "example" {
+  name                = "example-namespace"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+  sku                 = "Standard"
+  capacity            = 2
+}
+
+resource "azurerm_eventhub" "example" {
+  name                = "acceptanceTestEventHub"
+  namespace_name      = azurerm_eventhub_namespace.example.name
+  resource_group_name = azurerm_resource_group.example.name
+  partition_count     = 2
+  message_retention   = 2
+}
+
+resource "azurerm_eventhub_authorization_rule" "example" {
+  name                = "example-rule"
+  namespace_name      = azurerm_eventhub_namespace.example.name
+  eventhub_name       = azurerm_eventhub.example.name
+  resource_group_name = azurerm_resource_group.example.name
+  listen              = true
+  send                = false
+  manage              = false
+}
+
+resource "azurerm_security_center_automation" "example" {
+  name                = "example-automation"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+
+  action {
+    type              = "EventHub"
+    resource_id       = azurerm_eventhub.example.id
+    connection_string = azurerm_eventhub_authorization_rule.example.primary_connection_string
   }
 
-  high_priority_security_recommendations = true
+  source {
+    event_source = "Alerts"
+    rule_set {
+      rule {
+        property_path  = "properties.metadata.severity"
+        operator       = "Equals"
+        expected_value = "High"
+        property_type  = "String"
+      }
+    }
+  }
+
+  scopes = ["/subscriptions/${data.azurerm_client_config.current.subscription_id}"]
 }
 
-resource "azurerm_defender_for_cloud_subscription" "example" {
-  is_enabled = true
-  resource_group_name = azurerm_resource_group.example.name
-}
+
+# resource "azurerm_defender_for_cloud_subscription" "example" {
+#   is_enabled = true
+#   resource_group_name = azurerm_resource_group.example.name
+# }
 
 
 
