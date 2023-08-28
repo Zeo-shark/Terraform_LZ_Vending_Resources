@@ -89,7 +89,7 @@ resource "azurerm_monitor_action_group" "example" {
 
 resource "azurerm_consumption_budget_subscription" "example" {
   name            = "example"
-  subscription_id = data.azurerm_subscription.current.id
+  subscription_id = data.azurerm_client_config.current.subscription_id
 
   amount     = 1000
   time_grain = "Monthly"
@@ -149,36 +149,27 @@ resource "azurerm_consumption_budget_subscription" "example" {
 }
 
 # #budget alert
-# resource "azurerm_budget_alert" "rg_alert" {
-#   name               = "rg-budget-alert"
-#   resource_group_name = azurerm_resource_group.example.name
-#   budget_id          = azurerm_budget.rg_budget.id
 
-#   threshold = 70
-#   direction = "Up"
-#   operator  = "GreaterThan"
-#   time_aggregation = "Average"
-# }
 
 #rabac roles subscription and resource groups level
 resource "azurerm_role_assignment" "rbac_owner" {
   for_each = toset(var.rbac_roles["owner"]["assignments"])
 
-  principal_id   = azurerm_user_assigned_identity.your_identity.principal_id
+  principal_id   = "9a9e2da0-3f04-4a60-9d24-cca10ee77f7f"
   role_definition_name = "Owner"
 }
 
 resource "azurerm_role_assignment" "rbac_contributor" {
   for_each = toset(var.rbac_roles["contributor"]["assignments"])
 
-  principal_id   = azurerm_user_assigned_identity.your_identity.principal_id
+  principal_id   = "9a9e2da0-3f04-4a60-9d24-cca10ee77f7f"
   role_definition_name = "Contributor"
 }
 
 resource "azurerm_role_assignment" "rbac_vm_contributor" {
   for_each = toset(var.rbac_roles["vm_contributor"]["assignments"])
 
-  principal_id   = azurerm_user_assigned_identity.your_identity.principal_id
+  principal_id   = "9a9e2da0-3f04-4a60-9d24-cca10ee77f7f"
   role_definition_name = "Virtual Machine Contributor"
 }
 # Define other resources here (VNet, Subnet, Route Table, NSG, DDoS policy, SIEM integration, Tags, Budgets, Defender for Cloud)
