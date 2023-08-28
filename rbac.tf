@@ -35,3 +35,5 @@ variable "rbac_roles" {
 
 # [Friday 4:38 PM] Allan Lewis
 # defender for cloud
+
+# High Priority advices Security> Security Center> Pricing & settings> Pricing tier> Standard
