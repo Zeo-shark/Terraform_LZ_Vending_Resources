@@ -2,30 +2,44 @@ provider "azurerm" {
   features {}
 }
 
+#management group
+resource "azurerm_management_group" "example" {
+  name = "example-management-group"
+}
+
+#resource group
 resource "azurerm_resource_group" "example_rg" {
   name     = "example-resources"
   location = "East US"
 }
 
-resource "azurerm_management_group" "example" {
-  name = "example-management-group"
-}
 
+
+#policy def
 resource "azurerm_policy_definition" "example" {
-  name        = "example-policy-definition"
-  display_name = "Example Policy Definition"
-  description = "An example policy definition"
+   name        = "enforce-tagging"
+  display_name = "Enforce Tagging Policy"
+  description = "Enforces required tags on resources"
   policy_type = "Custom"
   mode        = "All"
-  
+
   metadata = jsonencode({
     category = "Tags"
   })
 
   policy_rule = jsonencode({
-    if exists(["", "tags['Environment']"], "stringEquals", "Prod") then true else false
+    "if" : {
+      "field" : "tags",
+      "not" : {
+        "exists" : "true"
+      }
+    },
+    "then" : {
+      "effect" : "deny"
+    }
   })
 }
+
 
 resource "azurerm_policy_assignment" "example" {
   name                 = "example-policy-assignment"
@@ -33,6 +47,7 @@ resource "azurerm_policy_assignment" "example" {
   policy_definition_id = azurerm_policy_definition.example.id
 }
 
+# budgets plans
 resource "azurerm_budget" "example" {
   name                  = "example-budget"
   resource_group_name   = azurerm_resource_group.example.name
@@ -43,6 +58,19 @@ resource "azurerm_budget" "example" {
   }
 }
 
+#budget alert
+resource "azurerm_budget_alert" "rg_alert" {
+  name               = "rg-budget-alert"
+  resource_group_name = azurerm_resource_group.example_rg.name
+  budget_id          = azurerm_budget.rg_budget.id
+
+  threshold = 70
+  direction = "Up"
+  operator  = "GreaterThan"
+  time_aggregation = "Average"
+}
+
+#rabac roles subscription and resource groups level
 resource "azurerm_role_assignment" "rbac_owner" {
   for_each = toset(var.rbac_roles["owner"]["assignments"])
 
@@ -81,8 +109,7 @@ resource "azurerm_subnet" "example_subnet" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-# Define more resources as needed
-
+#UDR
 resource "azurerm_route_table" "example" {
   name                = "example-routetable"
   location            = azurerm_resource_group.example.location
@@ -96,6 +123,7 @@ resource "azurerm_route_table" "example" {
   }
 }
 
+#   NSG
 resource "azurerm_network_security_group" "example" {
   name                = "example-nsg"
   location            = azurerm_resource_group.example.location
@@ -182,6 +210,7 @@ resource "azurerm_security_center_subscription_pricing" "example" {
   tier                = "Standard"
 }
 
+#security SIEM integration
 resource "azurerm_security_center_contact" "example" {
   name          = "example-contact"
   email         = "security@example.com"
@@ -207,9 +236,17 @@ resource "azurerm_security_center_assessment_policy" "example" {
   status              = "Enabled"
 }
 
+
 resource "azurerm_security_center_auto_provisioning" "defender" {
   auto_provision = true
   workspace_id   = azurerm_log_analytics_workspace.example.id
+  tier           = "Standard"
+
+  security_center_contact {
+    alert_notifications = ["High", "Critical"]
+  }
+
+  high_priority_security_recommendations = true
 }
 
 resource "azurerm_defender_for_cloud_subscription" "example" {
